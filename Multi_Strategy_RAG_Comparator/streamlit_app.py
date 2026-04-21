@@ -5,13 +5,15 @@ import tempfile, os
 
 st.title("Multi-Strategy RAG Comparator")
 
-if "llm" not in st.session_state:
-    st.session_state.llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.0)
-
 with st.sidebar:
     groq_key = st.sidebar.text_input("Enter Groq API Key", type="password")
     cohere_key = st.sidebar.text_input("Enter Cohere API Key", type="password")
     uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
+
+if groq_key and "llm" not in st.session_state:
+    os.environ['GROQ_API_KEY'] = groq_key
+    os.environ['CO_API_KEY'] = cohere_key
+    st.session_state.llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0.0, api_key=groq_key)
 
     if uploaded_file and st.button("Build Pipeline"):
         # Save with consistent name — not random temp name
