@@ -72,8 +72,30 @@ def run_query(query, embedding,
             query, embedding, chunks, llm, retrieval_embedding
         )
 
-        # Step 2: Rerank
-        reranked = rerank(query, unique_context, top_n=5)
+        ## Swap child - parent Only for parent -child Strategy
+        if strategy_name == "Parent-Child":
+            parent_store = parent_child_chunker.load_parent_store()
+            unique_context = parent_child_chunker.get_parent_chunks(
+            unique_context, parent_store
+        )
+            
+             # Deduplicate on parent_id
+            seen_sections = set()
+            unique_parents = []
+            for doc in unique_context:
+                sid = doc.metadata.get('section_id')
+                if sid and sid not in seen_sections:
+                    seen_sections.add(sid)
+                    unique_parents.append(doc)
+            unique_context = unique_parents
+
+
+        # Step 2: Rerank 
+        if strategy_name == "Parent-Child":
+            reranked = rerank(query, unique_context, top_n=3)
+        else:
+            reranked = rerank(query, unique_context, top_n=5)
+
 
         # Step 3: Print results
         print(f"\nTop chunks for [{strategy_name}]:")

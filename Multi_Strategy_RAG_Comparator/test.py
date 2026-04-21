@@ -1,21 +1,42 @@
 from src.ingestion import load_pdf
-from src.chunkers.header_chunker import chunk as header_chunk
-from src.chunkers.parent_child_chunker import create_child_chunks, create_parent_chunks
-from copy import deepcopy
+from src.chunkers.header_chunker import chunk
+from src.chunkers.parent_child_chunker import create_child_chunks
+from src.embeddings import get_embedding_model, store_embeddings
 
-pages = load_pdf("langchain_rag_technical_docs_clean.pdf")
+# Setup
+embedding = get_embedding_model()
 
-# Step 1: get header chunks
-header_chunks = header_chunk(pages)
+from langchain_chroma import Chroma
+child_embedding = Chroma(
+    collection_name="child_chunks",
+    embedding_function=embedding,
+    persist_directory="./chroma_chunks_db"
+)
 
-# Step 2: deepcopy before passing to parent_child
-parent_child_input = deepcopy(header_chunks)
+# Test 1: Raw search without filter
+print("=== RAW SEARCH ===")
+query = "What is Query Decomposition in the context of Advanced RAG Patterns"
+results = child_embedding.similarity_search(query, k=5)
+for r in results:
+    print(r.metadata.get('Header 2'))
+    print(r.metadata.get('Header 1'))
+    print("----")
 
-# Step 3: create child and parent
-child_chunks = create_child_chunks(parent_child_input)
-parent_chunks = create_parent_chunks(child_chunks)
-
-print(f"Child chunks: {len(child_chunks)}")
-print(f"Parent chunks: {len(parent_chunks)}")
-print(f"\nChild metadata: {child_chunks[0].metadata}")
-print(f"\nParent metadata: {parent_chunks[0].metadata}")
+# Test 2: Search with noise filter
+print("\n=== WITH NOISE FILTER ===")
+NOISE_CHAPTERS = {
+    "Chapter 14: API Reference",
+    "Chapter 2: Python Environment Setup",
+    "Appendix E: Testing Your RAG Pipeline",
+    "Appendix F: RAG Interview Questions & Model Answers"
+}
+# How many chunks are indexed?
+print("Total chunks:", child_embedding._collection.count())
+results2 = child_embedding.similarity_search(
+    query, k=5,
+    filter={"Header 1": {"$nin": list(NOISE_CHAPTERS)}}
+)
+for r in results2:
+    print(r.metadata.get('Header 2'))
+    print(r.metadata.get('Header 1'))
+    print("----")

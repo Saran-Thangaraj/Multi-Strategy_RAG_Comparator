@@ -14,12 +14,14 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Upload a PDF", type="pdf")
 
     if uploaded_file and st.button("Build Pipeline"):
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            tmp.write(uploaded_file.read())
-            tmp_path = tmp.name
+        # Save with consistent name — not random temp name
+        UPLOAD_PATH = "uploaded_doc.pdf"
+        with open(UPLOAD_PATH, "wb") as f:
+            f.write(uploaded_file.read())
+
         with st.spinner("Building pipeline..."):
-            st.session_state.pipeline = build_pipeline(pdf_path=tmp_path)
-        os.unlink(tmp_path)
+            st.session_state.pipeline = build_pipeline(pdf_path=UPLOAD_PATH)
+
         st.success(f"Pipeline built from: {uploaded_file.name}")
 
     if "pipeline" in st.session_state:
@@ -47,6 +49,8 @@ if st.button("Search"):
                     section = (
                         doc.metadata.get("Header 2")
                         or doc.metadata.get("Header 1")
+                        or doc.metadata.get('section_id')
+                        or doc.metadata.get('chapter_id')
                         or doc.metadata.get("page_chapter")
                         or "Unknown"
                     )

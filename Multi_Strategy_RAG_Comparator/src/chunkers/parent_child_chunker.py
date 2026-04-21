@@ -118,7 +118,10 @@ def get_parent_chunks(child_docs, parent_store):
         if parent_id and parent_id not in seen:
             parent_chunk = parent_store.get(parent_id)
             if parent_chunk:
-                parent_docs.append(parent_chunk)
+                parent_docs.append(Document(
+                    page_content=parent_chunk['page_content'],
+                    metadata=parent_chunk['metadata']
+                ))
                 seen.add(parent_id)
 
     return parent_docs

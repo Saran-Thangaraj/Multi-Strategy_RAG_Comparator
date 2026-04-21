@@ -10,6 +10,7 @@ def rerank(query: str, docs: list, top_n: int = 5) -> list:
         query=query,
         documents=docs
     )
+    print(reranked_docs)
     # threshold = 0.3
     # # Filter low score chunks
     # reranked_docs =  [doc for doc in reranked_docs 
