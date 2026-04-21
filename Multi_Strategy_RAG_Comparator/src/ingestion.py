@@ -23,6 +23,4 @@ def load_pdf(path: str) -> list:
     filename = os.path.basename(path)
     for page in pages:
         page.metadata['source'] = filename
-
-
     return pages
