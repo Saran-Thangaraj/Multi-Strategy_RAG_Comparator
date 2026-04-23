@@ -217,3 +217,28 @@ Strong query → strong embedding → correct retrieval.
 ### Inspired By
 HyDE (Hypothetical Document Embeddings) — using LLM to 
 bridge gap between vague query and specific document content.
+
+
+### What we built:
+User query → section search → LLM rewrites query → retrieval
+
+### How it differs from HyDE:
+HyDE: query → LLM generates hypothetical answer → embed answer
+Ours: query → find relevant sections → LLM rewrites question → embed rewritten query
+
+### Why ours is better:
+HyDE can hallucinate irrelevant content.
+Our approach is grounded by actual document sections.
+
+
+## Evaluation Results (RAGAS)
+
+| Strategy     | Context Precision | Context Recall |
+|--------------|:-----------------:|:--------------:|
+| Fixed-Size   | 0.61              | 0.67           |
+| Header-Based | **1.00**          | **1.00**       |
+| Parent-Child | 0.83              | 1.00           |
+
+Header-Based chunking achieves perfect scores because it 
+preserves topic boundaries — each chunk maps to exactly 
+one section of the document.
